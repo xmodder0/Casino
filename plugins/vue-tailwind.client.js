@@ -36,9 +36,9 @@ const settings = {
     props: {
       fixedClasses: {
         overlay:
-          'z-50 overflow-auto scrolling-touch left-0 top-0 bottom-0 right-0 w-full h-full fixed bg-opacity-50',
-        wrapper: 'relative mx-auto z-60 max-w-lg px-3 py-12',
-        modal: 'overflow-visible relative rounded-xl bg-dark shadow p-12',
+          'left-0 top-0 bottom-0 right-0 w-full h-full fixed bg-opacity-50',
+        wrapper: 'relative mx-auto max-w-lg px-3 py-12',
+        modal: 'relative rounded-xl bg-dark shadow p-12',
         body: '',
         header: 'text-2xl font-black text-center uppercase mb-6',
         footer: 'p-3 rounded-b',

@@ -133,7 +133,7 @@ $xxl: 1280px;
 .header {
   position: sticky;
   top: 0;
-  z-index: 30;
+  z-index: 100;
   border-bottom: 1px;
   color: var(--x_text-primary);
   border-color: var(--x_border-color);

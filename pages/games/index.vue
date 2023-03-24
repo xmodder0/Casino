@@ -3,7 +3,7 @@
     <p class="font-black p-2 text-xl">ALL GAMES</p>
     <div class="x_container md:justify-center">
       <div class="x_slide-container">
-        <div class="parent">
+        <div class="x_parent">
           <div class="crash-content">
             <!-- Default content -->
           </div>
@@ -13,7 +13,7 @@
             </button>
           </div>
         </div>
-        <div class="parent">
+        <div class="x_parent">
           <div class="mines-content">
             <!-- Default content -->
           </div>
@@ -23,7 +23,7 @@
             </button>
           </div>
         </div>
-        <div class="parent">
+        <div class="x_parent">
           <div class="blackjack-content">
             <!-- Default content -->
           </div>
@@ -33,7 +33,7 @@
             </button>
           </div>
         </div>
-        <div class="parent">
+        <div class="x_parent">
           <div class="wheel-content">
             <!-- Default content -->
           </div>
@@ -43,7 +43,7 @@
             </button>
           </div>
         </div>
-        <div class="parent">
+        <div class="x_parent">
           <div class="crash-content">
             <!-- Default content -->
           </div>
@@ -80,7 +80,7 @@
   margin-left: 10px;
   margin-right: 10px;
 }
-.parent {
+.x_parent {
   position: relative;
   width: 110px;
   height: 150px;
@@ -138,10 +138,10 @@
   backdrop-filter: blur(3px);
 }
 
-.parent:hover .play-button {
+.x_parent:hover .play-button {
   opacity: 1;
 }
-.parent:hover .play-button .x_play {
+.x_parent:hover .play-button .x_play {
   transition: opacity 1 ease;
   position: absolute;
   opacity: 1;
@@ -168,6 +168,12 @@ import PlayIcon from '@/static/img/icon/play.svg?inline'
 export default {
   components: {
     PlayIcon,
+  },
+  mounted() {
+    this.$nextTick(() => {
+      this.$nuxt.$loading.start()
+      setTimeout(() => this.$nuxt.$loading.finish(), 2000)
+    })
   },
   methods: {
     playSound() {

@@ -1,7 +1,7 @@
 <template>
   <div class="crash">
     <div ref="crashWrapper" class="crash__wrapper">
-      <ul class="crash__lines">
+      <ul class="crash__lines opacity-0">
         <li
           v-for="(number, idx) in numbers"
           :key="`crash-line-${idx}`"
@@ -11,47 +11,37 @@
         </li>
       </ul>
       <div v-show="rate > 1" class="crash__rate">
-        <div class="crash__ticker" :style="{ bottom: `${percent / 2}%` }">
-          <svg class="crash__background">
-            <use xlink:href="/img/icon/free/sprite.svg#crash-label"></use>
-          </svg>
-          <div class="crash__ticker--count text-dark">
-            {{ rate }}
-          </div>
+        <div class="crash__ticker--count text-white font-semibold">
+          {{ rate }}
         </div>
       </div>
+      <i
+        v-show="rate > 1"
+        v-for="star in stars"
+        :key="star.id"
+        class="star"
+        :style="{
+          left: star.x + 'px',
+          width: '1px',
+          height: star.h + 'px',
+          animationDuration: star.duration + 's',
+        }"
+      ></i>
+      <div ref="rocket" class="crash__ticker">
+        <div class="crash__rocket">
+          <img src="@/static/img/rocket.png" :style="rocketBoom" key="rocket" />
+        </div>
+        <div class="sprite_explosion" :style="rocketExplosion"></div>
+      </div>
       <div ref="crashChartContainer" class="crash__chart">
-        <div v-show="timeleft > 0 && isActive" class="crash__countdown">
-          <span class="w-full text-center crash__start-at">Запуск через</span>
+        <div v-show="timeleft > 0" class="crash__countdown">
+          <span class="w-full text-center crash__start-at">Starting at</span>
           <span class="flex items-center"
             ><svg class="w-6 h-5 mr-2">
               <use :xlink:href="`/img/icon/free/sprite.svg#clock`"></use></svg
             >{{ (timeleft / 1000).toFixed(1) }}</span
           >
         </div>
-        <svg
-          ref="crashSvg"
-          class="crash__svg"
-          xmlns="http://www.w3.org/2000/svg"
-          :viewBox="`0 0 ${crashChartContainerWidth} ${chartHeight}`"
-          :width="chartWrapperWidth"
-          :height="chartHeight"
-        >
-          <defs>
-            <linearGradient id="header-shape-gradient" x2="0" y2="1">
-              <stop offset="0%" stop-color="#ffb200" />
-              <stop offset="40%" stop-color="#ffb200" />
-              <stop offset="100%" stop-color="#ffffff" />
-            </linearGradient>
-          </defs>
-          <path
-            stroke="#ffb200"
-            stroke-width="4px"
-            fill="url(#header-shape-gradient) transparent"
-            stroke-linecap="round"
-            :d="pathD"
-          />
-        </svg>
       </div>
     </div>
   </div>
@@ -69,7 +59,11 @@ export default {
   },
   data() {
     return {
-      maxLines: 4,
+      count: 20,
+      stars: [],
+      rocketBoom: {},
+      rocketExplosion: {},
+      maxLines: 7,
       timeleft: 0,
       interval: null,
       loaded: false,
@@ -82,24 +76,6 @@ export default {
     ...mapState({
       rate: (state) => state.crash.rate,
     }),
-    pathD() {
-      const width = this.crashChartContainerWidth
-      const height = this.chartHeight
-      const offset = 8
-      const width1 = width / 3
-      const height1 = height / 2
-
-      const x0y0 = `M ${offset},${height - offset}`
-      const x1y1 = `${width1},${height1}`
-      const x2y2 = `${width1 * 2},${height1}`
-      const x3y3 = `${width - offset},${height - offset}`
-
-      const q1 = `Q ${(width1 / 3) * 2},${height - height1 / 3}`
-      const q2 = `Q ${width / 2},0`
-      const q3 = `Q ${width1 * 2 + width1 / 3},${height - height1 / 3}`
-
-      return `${x0y0} ${q1} ${x1y1} ${q2} ${x2y2} ${q3} ${x3y3}`
-    },
     percent() {
       const res = this.rate * 100 - 100
       return res >= 100 ? 100 : res
@@ -163,18 +139,30 @@ export default {
         if (data.timeleft > 0) {
           this.timeleft = data.timeleft
           this.startCountDown()
+        } else {
+          this.startRocketAnim()
         }
       })
       .on('game:new', (data) => {
         this.SET_RATE(1)
-        this.timeleft = data.timeleft
         clearInterval(this.interval)
+        this.timeleft = data.timeleft
+        this.resetRocketAnim()
+        setInterval(() => {
+          this.startRocketAnim()
+        }, this.timeleft)
+        this.showRocketBoom()
         this.startCountDown()
       })
       .on('game:tick', (data) => {
         if (this.isActive) this.SET_RATE(data.rate)
       })
-      .on('game:final', (data) => {})
+      .on('game:final', (data) => {
+        this.hideRocketBoom()
+        setTimeout(() => {
+          this.resetRocketAnim()
+        }, 650)
+      })
 
     if (typeof document.hidden !== 'undefined') {
       // Opera 12.10 and Firefox 18 and later support
@@ -193,6 +181,9 @@ export default {
     })
   },
   mounted() {
+    this.createStars()
+    this.startRocketAnim()
+    this.resetRocketAnim()
     this.loaded = true
   },
   beforeDestroy() {
@@ -213,10 +204,12 @@ export default {
         this.timeleft = 0
       }
       this.interval = setInterval(() => {
-        if (this.timeleft <= 0) {
+        if (this.timeleft < 0) {
           return clearInterval(this.interval)
+        } else if (this.timeleft > 0) {
+          this.resetRocketAnim()
+          this.timeleft -= 100
         }
-        this.timeleft -= 100
       }, 100)
     },
     handleResize() {
@@ -224,6 +217,81 @@ export default {
       setTimeout(() => {
         this.loaded = true
       }, 1)
+    },
+    createStars() {
+      for (let i = 1; i <= this.count; i++) {
+        const x = Math.floor(Math.random() * window.innerWidth)
+        const duration = Math.random() * 1
+        const h = Math.random() * 100
+        this.stars.push({ id: i, x, duration, h })
+      }
+    },
+    resetRocketAnim() {
+      const rocket = this.$refs.rocket
+
+      this.$anime({
+        targets: rocket,
+        translateX: 0,
+        translateY: 0,
+        rotate: 0,
+      }).restart()
+    },
+    startRocketAnim() {
+      const rocket = this.$refs.rocket
+
+      this.$anime({
+        targets: rocket,
+        translateX: [
+          '0',
+          'calc(10% + 110px)',
+          'calc(70% + 148.5px)',
+          'calc(100% + 165px)',
+        ],
+        translateY: [
+          '0',
+          'calc(40% + -40px)',
+          'calc(50% + -60px)',
+          'calc(60% + -80px)',
+          'calc(70% + -100px)',
+          'calc(80% + -140.5px)',
+          'calc(90% + -200.5px)',
+          'calc(100% + -255px)',
+        ],
+        rotate: [
+          '0',
+          '-10deg',
+          '-15deg',
+          '-20deg',
+          '-25deg',
+          '-50deg',
+          '-60deg',
+          '-70deg',
+          '-75deg',
+        ],
+        duration: 1200,
+        easing: 'linear',
+      })
+    },
+    hideRocketBoom() {
+      this.rocketBoom = {
+        opacity: 0,
+      }
+      this.rocketExplosion = {
+        opacity: 1,
+      }
+      setTimeout(() => {
+        this.rocketExplosion = {
+          opacity: 0,
+        }
+      }, 650)
+    },
+    showRocketBoom() {
+      this.rocketBoom = {
+        opacity: 1,
+      }
+      this.rocketExplosion = {
+        opacity: 0,
+      }
     },
   },
 }
@@ -236,17 +304,177 @@ $lg: 768px;
 $xl: 1024px;
 $xxl: 1280px;
 
+.sprite_explosion {
+  opacity: 0;
+  position: absolute;
+  background-image: url('@/static/img/explosion1.png');
+  background-repeat: no-repeat;
+  background-size: cover;
+  width: 70px;
+  height: 70px;
+  animation: play-sprite-animation 0.65s steps(7) infinite;
+}
+
+@keyframes play-sprite-animation {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -520px 0;
+  }
+}
+
+.star {
+  position: absolute;
+  top: -250px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  animation: star-anim linear infinite;
+}
+
+@keyframes star-anim {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+.flame_container {
+  position: absolute;
+  margin: 0 auto;
+  width: 25px;
+  height: 25px;
+  bottom: 0;
+  left: 30%;
+  z-index: -10;
+  transform-origin: center top;
+  animation-name: flames;
+  animation-duration: 3ms;
+  animation-delay: 200ms;
+  animation-timing-function: ease-in;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+.flame {
+  bottom: 0;
+  position: absolute;
+  border-bottom-right-radius: 50%;
+  border-bottom-left-radius: 50%;
+  border-top-left-radius: 50%;
+  transform: rotate(135deg) scale(1.5, 1.5);
+  -moz-transform: rotate(135deg) scale(1.5, 1.5);
+  -webkit-transform: rotate(135deg) scale(1.5, 1.5);
+  -o-transform: rotate(135deg) scale(1.5, 1.5);
+}
+.yellow {
+  left: 15px;
+  width: 15px;
+  height: 15px;
+  background: gold;
+  box-shadow: 0px 0px 9px 4px gold;
+}
+.orange {
+  left: 10px;
+  width: 25px;
+  height: 25px;
+  background: orange;
+  box-shadow: 0px 0px 9px 4px orange;
+}
+.red {
+  left: 5px;
+  top: 20px;
+  width: 35px;
+  height: 35px;
+  background: OrangeRed;
+  border: 1px solid OrangeRed;
+  box-shadow: 0px 0px 5px 4px OrangeRed;
+}
+.white {
+  left: 15px;
+  top: 20px;
+  width: 25px;
+  height: 25px;
+  background: white;
+  box-shadow: 0px 0px 9px 4px white;
+}
+.x_circle {
+  border-radius: 50%;
+  position: absolute;
+  width: 5px;
+  height: 5px;
+}
+.blue {
+  width: 5px;
+  height: 5px;
+  left: 25px;
+  top: 5px;
+  background: SlateBlue;
+  box-shadow: 0px 0px 15px 10px #4fc1e9;
+}
+.black {
+  width: 25px;
+  height: 25px;
+  left: 10px;
+  top: -30px;
+  background: #ddd;
+  border: 1px solid #282a3a;
+  box-shadow: 0px 0px 10px 10px #282a3a;
+}
+
+@keyframes flames {
+  0% {
+    transform: rotate(-1deg);
+    -moz-transform: rotate(-1deg);
+    -webkit-transform: rotate(-1deg);
+  }
+  20% {
+    transform: rotate(1deg);
+    -moz-transform: rotate(1deg);
+    -webkit-transform: rotate(1deg);
+  }
+  40% {
+    transform: rotate(-1deg);
+    -moz-transform: rotate(-1deg);
+    -webkit-transform: rotate(-1deg);
+  }
+  60% {
+    transform: rotate(1deg) scaleY(1.04);
+  }
+  80% {
+    transform: rotate(-2deg) scaleY(0.92);
+    -moz-transform: rotate(-2deg) scaleY(0.92);
+    -webkit-transform: rotate(-2deg) scaleY(0.92);
+  }
+  100% {
+    transform: rotate(1deg);
+    -webkit-transform: rotate(1deg);
+    -moz-transform: rotate(1deg);
+  }
+}
+
 .crash {
   &__wrapper {
+    user-select: none;
+    pointer-events: none;
     overflow: hidden;
     position: relative;
+    display: flex;
+    justify-content: center;
+    background: #000;
+    border-radius: 10px;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-image: url('@/static/img/crash_bg.jpeg');
+    background-position: center;
   }
 
   &__lines {
     display: grid;
     gap: 1.5rem;
     font-weight: 500;
-    width: 40px;
+    width: 0px;
     font-size: 12px;
 
     @media screen and (min-width: $sm) {
@@ -269,7 +497,7 @@ $xxl: 1280px;
     &::after {
       content: '';
       position: absolute;
-      right: -10px;
+      right: 0px;
       top: 50%;
       transform: translateY(-50%) translateX(100%);
       border-top: 1px dashed rgb(227, 226, 223);
@@ -320,8 +548,9 @@ $xxl: 1280px;
     height: 100%;
     display: grid;
     gap: 0.5rem;
-    font-weight: 600;
-    font-size: 20px;
+    font-weight: 900;
+    font-size: 24px;
+    z-index: 30;
   }
 
   &__background {
@@ -338,24 +567,14 @@ $xxl: 1280px;
 
   &__ticker {
     position: absolute;
+    display: flex;
+    bottom: 0;
     left: 0;
-    transform: translateY(50%);
     font-weight: 600;
-    font-size: 10px;
+    z-index: 40;
 
     @media screen and (min-width: $md) {
       font-size: 14px;
-    }
-
-    &:after {
-      content: '';
-      position: absolute;
-      right: 3px;
-      top: 50%;
-      transform: translate(100%, -50%);
-      width: 100vw;
-      border-top: 1.5px dashed rgba(227, 226, 223, 0.85);
-      z-index: -1;
     }
 
     &--count {
@@ -369,6 +588,23 @@ $xxl: 1280px;
       text-align: center;
       height: 100%;
       border-radius: 8px;
+    }
+  }
+
+  &__rocket {
+    position: relative;
+    width: 4rem;
+    transform: translateY(15%) rotate(90deg);
+    z-index: -10;
+  }
+
+  @keyframes animate {
+    0%,
+    100% {
+      transform: translateY(-1px);
+    }
+    50% {
+      transform: translateY(1px);
     }
   }
 

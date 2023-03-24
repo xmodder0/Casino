@@ -72,21 +72,11 @@ a {
 
 .layout-enter-active,
 .layout-leave-active {
-  transition: opacity 0.5s;
+  transition: all 0.3s ease;
 }
 .layout-enter,
 .layout-leave-active {
-  opacity: 0;
-}
-.page-enter-active,
-.page-leave-active {
-  transition-property: opacity;
-  transition-timing-function: ease-in-out;
-  transition-duration: 500ms;
-}
-.page-enter,
-.page-leave-to {
-  opacity: 0;
+  transform: translateX(100%);
 }
 /* ---------------------------------- */
 .fade-enter-active,
@@ -147,4 +137,14 @@ a {
   z-index: 998;
   background: rgba(0, 0, 0, 0.04);
   cursor: none;
+}
+.x__modal {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 99999;
+  overflow-y: hidden;
+  backdrop-filter: blur(8px);
 }

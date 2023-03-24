@@ -1,5 +1,5 @@
 <template>
-  <t-modal :click-to-close="false" name="auth">
+  <t-modal class="x__modal" :click-to-close="false" name="auth">
     <template slot="close">
       <svg class="w-full h-full">
         <use xlink:href="/img/icon/free/sprite.svg#close"></use>

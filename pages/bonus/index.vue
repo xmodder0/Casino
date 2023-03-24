@@ -90,7 +90,7 @@
 <script>
 import CoinIcon from '@/static/img/icon/coin.svg?inline'
 import VkIcon from '@/static/img/social/vk.svg?inline'
-import freeWheel from '~/components/free/free-wheel.vue'
+import freeWheel from '@/components/free/free-wheel.vue'
 
 export default {
   components: { freeWheel, CoinIcon, VkIcon },
@@ -98,6 +98,12 @@ export default {
     return {
       promocode: '',
     }
+  },
+  mounted() {
+    this.$nextTick(() => {
+      this.$nuxt.$loading.start()
+      setTimeout(() => this.$nuxt.$loading.finish(), 2000)
+    })
   },
   methods: {
     usePromocode() {

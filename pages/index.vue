@@ -13,7 +13,15 @@
 <script>
 import cardGame from '~/components/card/card-game.vue'
 export default {
-  components: { cardGame },
+  components: {
+    cardGame,
+  },
+  mounted() {
+    this.$nextTick(() => {
+      this.$nuxt.$loading.start()
+      setTimeout(() => this.$nuxt.$loading.finish(), 2000)
+    })
+  },
 }
 </script>
 

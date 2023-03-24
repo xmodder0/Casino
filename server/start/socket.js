@@ -181,9 +181,12 @@ Event.on('crash::start', async () => {
         }
         crashInstance.emit('game:final', { rate: game.rate_final })
         setTimeout(() => {
-          crashInstance.emit('game:new', { timeleft: timeout })
+          crashInstance.emit('game:new', {
+            timeleft: timeout,
+            rate: current.toFixed(2),
+          })
           Event.fire('crash::start')
-        }, 5000)
+        }, 3000)
         return clearInterval(interval)
       } else {
         const winAuto = bets.rows.filter(

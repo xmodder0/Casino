@@ -34,19 +34,22 @@ export default {
     ],
   },
 
-  loading: {
-    color: tailwindConfig.theme.extend.colors.primary.DEFAULT,
-  },
+  loading: '~/components/LoadingBar.vue',
 
   // Global CSS: https://go.nuxtjs.dev/config-css
   css: ['~/assets/scss/root.scss'],
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
   plugins: [
+    '~/plugins/gsap.js',
+    '~/plugins/power2.js',
+    '~/plugins/timeline.js',
     '~/plugins/vue-tailwind.client.js',
     { src: '~/plugins/v-tooltip.client.js', mode: 'client' },
     { src: '~/plugins/vt-notification.client.js', mode: 'client' },
     { src: '~/plugins/axios-handler.client.js', mode: 'client' },
+    { src: '~/plugins/anime.js', mode: 'client' },
+    { src: '~/plugins/pixi.js', ssr: false },
   ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components
@@ -185,9 +188,6 @@ export default {
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
-    babel: {
-      plugins: [['@babel/plugin-transform-modules-commonjs', { loose: true }]],
-    },
     loaders: {
       vue: {
         transformAssetUrls: {

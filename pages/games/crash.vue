@@ -9,6 +9,11 @@
         </svg>
       </t-button>
     </h1>
+    <div class="col-span-8 pb-1 lg:col-span-5">
+      <div class="rounded-xl">
+        <crash-chart :socket="socket" />
+      </div>
+    </div>
     <div class="grid grid-cols-8 gap-1.5">
       <div class="col-span-8 p-12 x lg:col-span-3 rounded-xl">
         <form class="flex flex-col" @submit.prevent="betPlace">
@@ -81,11 +86,6 @@
           >
         </form>
       </div>
-      <div class="col-span-8 lg:col-span-5">
-        <div class="px-8 py-6 x rounded-xl">
-          <crash-chart :socket="socket" />
-        </div>
-      </div>
       <div class="col-span-8">
         <crash-table :socket="socket" />
       </div>
@@ -155,6 +155,12 @@ export default {
       },
     })
     this.socket.emit('game:status')
+  },
+  mounted() {
+    this.$nextTick(() => {
+      this.$nuxt.$loading.start()
+      setTimeout(() => this.$nuxt.$loading.finish(), 2000)
+    })
   },
   methods: {
     betPlace() {
